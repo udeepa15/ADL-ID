@@ -14,9 +14,23 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   try {
-    const blob = await put(filename, request.body, {
-      access: 'public',
-    });
+    const data = await request.arrayBuffer();
+
+    let blob;
+    try {
+      blob = await put(filename, data, {
+        access: 'public',
+      });
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      if (errorMessage.includes('private store') || errorMessage.includes('private access')) {
+        blob = await put(filename, data, {
+          access: 'private',
+        });
+      } else {
+        throw err;
+      }
+    }
 
     return NextResponse.json(blob);
   } catch (error) {
