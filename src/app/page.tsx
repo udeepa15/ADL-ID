@@ -1,169 +1,138 @@
 import Link from 'next/link';
-import { CreditCard, QrCode, ShieldCheck, UserCheck, ArrowRight, Sparkles, Building2, FileSpreadsheet, CheckCircle, Layers, Lock } from 'lucide-react';
+import { ArrowRight, Building2, CheckCircle2, ClipboardList, Printer, QrCode, ScanLine, UserCheck } from 'lucide-react';
+import { BrandMark } from '@/components/BrandMark';
+
+const btn = 'inline-flex items-center justify-center gap-2 min-h-11 px-5 py-2.5 rounded-xl border-[1.5px] font-heading font-bold text-[15px] transition-colors';
+
+const STEPS = [
+  {
+    icon: QrCode,
+    title: 'We set up your organization',
+    body: 'ADL Digi House creates your form, with any extra fields you need, and gives you a QR code and an admin login.',
+  },
+  {
+    icon: ScanLine,
+    title: 'Staff scan and apply',
+    body: 'Staff scan the code on their phone, fill in their details and take a photo. No app or account needed.',
+  },
+  {
+    icon: Printer,
+    title: 'We print, you track',
+    body: 'Cards move from Pending to Printing to Ready, and your admin can see each one’s status at any time.',
+  },
+];
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between selection:bg-blue-600 selection:text-white">
-      {/* Top Header Navigation */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-500/20">
-              <CreditCard className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="font-bold text-lg text-slate-900 tracking-tight">ADL ID Pass</span>
-              <span className="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">Enterprise SaaS</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href="/login"
-              className="px-4 py-2 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/apply?org=GH-2026"
-              className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm shadow-blue-500/20 transition-all flex items-center gap-1.5"
-            >
-              <span>Apply for Card</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
+    <div className="min-h-screen flex flex-col bg-white">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-line">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between">
+          <BrandMark />
+          <Link href="/login" className={`${btn} bg-ink border-transparent text-white hover:bg-ink-2`}>
+            Sign in
+          </Link>
         </div>
       </header>
 
-      {/* Hero Banner Section */}
-      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12 lg:py-20 flex-1 flex flex-col justify-center">
-        <div className="text-center max-w-3xl mx-auto mb-16 space-y-6">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-xs font-semibold text-blue-600 shadow-xs">
-            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-            <span>Modern Smart ID Card Platform</span>
-          </div>
-
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-tight">
-            Automated ID Card Issuing & <span className="text-blue-600">Dynamic SaaS Workflows</span>
-          </h1>
-
-          <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            Instant QR invitation setup, dynamic form fields, Vercel Blob cloud photo storage, and isolated Google Sheets multi-tab sync.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-            <Link
-              href="/apply?org=GH-2026"
-              className="w-full sm:w-auto px-7 py-3 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2"
-            >
-              <span>Submit Employee Application</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-
-            <Link
-              href="/login"
-              className="w-full sm:w-auto px-7 py-3 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-xs transition-all flex items-center justify-center gap-2"
-            >
-              <Building2 className="w-4 h-4 text-slate-400" />
-              <span>Portal Login</span>
-            </Link>
-          </div>
-        </div>
-
-        {/* Portals Showcase Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-          {/* Card 1: Shop Admin */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 shadow-xs hover:shadow-md hover:border-slate-300 transition-all flex flex-col justify-between group">
+      <main className="flex-1">
+        {/* Hero */}
+        <section className="bg-soft">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-24 grid gap-12 lg:grid-cols-[1.1fr_0.9fr] items-center">
             <div>
-              <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform">
-                <QrCode className="w-5 h-5" />
+              <p className="font-heading text-xs font-bold uppercase tracking-[0.12em] text-brand-600">Staff ID cards · ADL Digi House</p>
+              <h1 className="mt-4 text-4xl sm:text-5xl lg:text-[3.4rem] font-extrabold tracking-[-0.035em] leading-[1.07] text-ink text-balance">
+                ID cards for your whole team, <span className="text-brand">without the paperwork.</span>
+              </h1>
+              <p className="mt-5 text-lg text-ink-2 max-w-xl">
+                Your staff apply from their phones with one QR code. We print the cards, and you follow every one
+                from request to collection.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link href="/login" className={`${btn} bg-brand border-transparent text-white hover:bg-brand-600`}>
+                  Sign in to your portal <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                </Link>
+                <a href="#how-it-works" className={`${btn} border-ink text-ink hover:bg-ink hover:text-white`}>
+                  How it works
+                </a>
               </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">Shop Admin Portal</h3>
-              <p className="text-xs text-slate-600 mb-6 leading-relaxed">
-                Define custom form fields, generate SVG QR codes, issue automated client user credentials, and manage printing status queues.
+              <p className="mt-6 text-sm text-muted">
+                Applying for a card? Scan the QR code from your HR team. You don’t need an account.
               </p>
             </div>
-            <Link
-              href="/login"
-              className="inline-flex items-center text-xs font-semibold text-blue-600 hover:text-blue-700 gap-1.5 group-hover:translate-x-1 transition-transform"
-            >
-              <span>Access Shop Admin</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
 
-          {/* Card 2: Client Portal */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 shadow-xs hover:shadow-md hover:border-slate-300 transition-all flex flex-col justify-between group">
-            <div>
-              <div className="w-11 h-11 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform">
-                <UserCheck className="w-5 h-5" />
+            {/* Illustrative card */}
+            <div className="relative mx-auto w-full max-w-sm" aria-hidden="true">
+              <div className="absolute -right-6 -bottom-6 w-2/3 h-2/3 rounded-3xl bg-[radial-gradient(rgba(230,0,126,0.28)_1.6px,transparent_1.8px)] [background-size:14px_14px]" />
+              <div className="relative rounded-3xl bg-white border border-line shadow-pop overflow-hidden">
+                <div className="h-20 bg-ink px-6 flex items-center justify-between">
+                  <span className="font-heading font-extrabold text-white">City Hospital</span>
+                  <span className="w-8 h-8 rounded-lg bg-brand" />
+                </div>
+                <div className="p-6 flex gap-5">
+                  <div className="w-24 aspect-[4/5] rounded-xl bg-soft border border-line" />
+                  <div className="flex-1 space-y-3 pt-1">
+                    <div className="h-3.5 w-3/4 rounded bg-ink/80" />
+                    <div className="h-3 w-1/2 rounded bg-line-strong" />
+                    <div className="h-3 w-1/3 rounded bg-line-strong" />
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-status-ready-bg px-2.5 py-1 text-[13px] font-semibold text-status-ready">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Ready
+                    </span>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">Client Dashboard</h3>
-              <p className="text-xs text-slate-600 mb-6 leading-relaxed">
-                Isolated view for organization managers to monitor employee ID card status from Pending to Printing and Ready for pick-up.
-              </p>
             </div>
-            <Link
-              href="/login"
-              className="inline-flex items-center text-xs font-semibold text-slate-700 hover:text-slate-900 gap-1.5 group-hover:translate-x-1 transition-transform"
-            >
-              <span>Access Client Dashboard</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
           </div>
+        </section>
 
-          {/* Card 3: Employee Form */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 shadow-xs hover:shadow-md hover:border-slate-300 transition-all flex flex-col justify-between group">
-            <div>
-              <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform">
-                <ShieldCheck className="w-5 h-5" />
+        {/* How it works */}
+        <section id="how-it-works" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+          <p className="font-heading text-xs font-bold uppercase tracking-[0.12em] text-brand-600">How it works</p>
+          <h2 className="mt-3 text-3xl sm:text-4xl font-extrabold tracking-tight text-ink">Three steps from request to card</h2>
+          <ol className="mt-10 grid gap-5 md:grid-cols-3">
+            {STEPS.map(({ icon: Icon, title, body }, i) => (
+              <li key={title} className="rounded-2xl border border-line p-6 shadow-card">
+                <div className="flex items-center gap-3">
+                  <span className="w-11 h-11 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center">
+                    <Icon className="w-5 h-5" aria-hidden="true" />
+                  </span>
+                  <span className="font-heading text-sm font-bold text-muted">Step {i + 1}</span>
+                </div>
+                <h3 className="mt-4 text-lg font-bold text-ink">{title}</h3>
+                <p className="mt-2 text-[15px] text-muted">{body}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        {/* Portals */}
+        <section className="bg-soft">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 grid gap-5 md:grid-cols-2">
+            {[
+              { icon: UserCheck, title: 'For organizations', body: 'Track your staff’s cards, share your application QR code, and see what’s ready for collection.', tone: 'bg-accent-50 text-accent-700' },
+              { icon: Building2, title: 'For ADL Digi House staff', body: 'Set up client organizations, review applications and manage the print queue.', tone: 'bg-brand-50 text-brand-600' },
+            ].map(({ icon: Icon, title, body, tone }) => (
+              <div key={title} className="rounded-2xl bg-white border border-line p-6 sm:p-8 flex flex-col">
+                <span className={`w-11 h-11 rounded-xl flex items-center justify-center ${tone}`}>
+                  <Icon className="w-5 h-5" aria-hidden="true" />
+                </span>
+                <h3 className="mt-4 text-xl font-bold text-ink">{title}</h3>
+                <p className="mt-2 text-[15px] text-muted flex-1">{body}</p>
+                <Link href="/login" className="mt-6 inline-flex items-center gap-1.5 font-heading font-bold text-brand-600 hover:text-brand">
+                  Sign in <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                </Link>
               </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">Dynamic Application Form</h3>
-              <p className="text-xs text-slate-600 mb-6 leading-relaxed">
-                Scan QR or click organization link to submit profile photo, standard fields, and custom organization inputs seamlessly.
-              </p>
-            </div>
-            <Link
-              href="/apply?org=GH-2026"
-              className="inline-flex items-center text-xs font-semibold text-blue-600 hover:text-blue-700 gap-1.5 group-hover:translate-x-1 transition-transform"
-            >
-              <span>Open Form (GH-2026)</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+            ))}
           </div>
-        </div>
-
-        {/* Feature Pill Grid */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 shadow-xs">
-          <h2 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <Layers className="w-4 h-4 text-blue-600" />
-            <span>Architecture & Integrations</span>
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-left">
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <p className="text-xs font-bold text-slate-900">Vercel Blob Storage</p>
-              <p className="text-[11px] text-slate-500 mt-0.5">Public & Private Stores</p>
-            </div>
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <p className="text-xs font-bold text-slate-900">Google Sheets API</p>
-              <p className="text-[11px] text-slate-500 mt-0.5">Isolated Multi-Tab Sync</p>
-            </div>
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <p className="text-xs font-bold text-slate-900">Firebase Auth</p>
-              <p className="text-[11px] text-slate-500 mt-0.5">Automated Client Accounts</p>
-            </div>
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-              <p className="text-xs font-bold text-slate-900">SVG Vectors</p>
-              <p className="text-[11px] text-slate-500 mt-0.5">Instant QR Code Export</p>
-            </div>
-          </div>
-        </div>
+        </section>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-200 py-6 bg-white text-center text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4">
-          <p>© {new Date().getFullYear()} ADL ID Pass • Modern Light SaaS Platform</p>
+      <footer className="bg-dark text-white/70">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <BrandMark inverted />
+          <div className="flex items-center gap-2 text-sm">
+            <ClipboardList className="w-4 h-4 text-brand-light" aria-hidden="true" />
+            <span>© {new Date().getFullYear()} ADL Digi House (Pvt) Ltd, Colombo</span>
+          </div>
         </div>
       </footer>
     </div>
