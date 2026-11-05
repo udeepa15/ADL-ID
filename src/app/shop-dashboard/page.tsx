@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { authFetch, fetchMe } from '@/lib/apiClient';
 import { QRCodeSVG } from 'qrcode.react';
 import Link from 'next/link';
 import SaaSLayout from '@/components/SaaSLayout';
@@ -67,9 +68,11 @@ export default function ShopDashboard() {
   const [createdModal, setCreatedModal] = useState<{
     orgId: string;
     clientEmail: string;
-    generatedPassword: string;
+    generatedPassword: string | null;
+    accountExisted: boolean;
     customFields: string[];
   } | null>(null);
+  const [statusError, setStatusError] = useState('');
 
   const [copied, setCopied] = useState(false);
   const qrRef = useRef<HTMLDivElement>(null);
@@ -78,8 +81,8 @@ export default function ShopDashboard() {
   async function fetchData() {
     try {
       const [appsRes, orgsRes] = await Promise.all([
-        fetch('/api/applications'),
-        fetch('/api/organizations')
+        authFetch('/api/applications'),
+        authFetch('/api/organizations')
       ]);
 
       if (appsRes.ok) {
@@ -99,13 +102,23 @@ export default function ShopDashboard() {
   }
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
         router.push('/login');
-      } else if (!user.email?.includes('shopadmin')) {
-        router.push('/client-dashboard');
-      } else {
-        fetchData();
+        return;
+      }
+      try {
+        const me = await fetchMe();
+        if (!me) {
+          router.push('/login');
+        } else if (me.role !== 'shop') {
+          router.push('/client-dashboard');
+        } else {
+          fetchData();
+        }
+      } catch (err) {
+        console.error('Failed to verify session:', err);
+        router.push('/login');
       }
     });
 
@@ -135,7 +148,7 @@ export default function ShopDashboard() {
     setOrgError('');
 
     try {
-      const res = await fetch('/api/organizations', {
+      const res = await authFetch('/api/organizations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -153,7 +166,8 @@ export default function ShopDashboard() {
       setCreatedModal({
         orgId: data.orgId,
         clientEmail: data.clientEmail,
-        generatedPassword: data.generatedPassword,
+        generatedPassword: data.generatedPassword ?? null,
+        accountExisted: Boolean(data.accountExisted),
         customFields: data.customFields || [],
       });
 
@@ -172,19 +186,23 @@ export default function ShopDashboard() {
   };
 
   const handleStatusUpdate = async (id: string, newStatus: string, orgId: string) => {
+    setStatusError('');
     try {
-      const res = await fetch('/api/applications', {
+      const res = await authFetch('/api/applications', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status: newStatus, orgId }),
       });
-      if (res.ok) {
-        setApplications(apps => apps.map(app => 
-          app.id === id ? { ...app, status: newStatus } : app
-        ));
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to update status');
       }
+      setApplications(apps => apps.map(app =>
+        app.id === id ? { ...app, status: newStatus } : app
+      ));
     } catch (err) {
       console.error('Failed to update status', err);
+      setStatusError(err instanceof Error ? err.message : 'Failed to update status');
     }
   };
 
@@ -209,7 +227,10 @@ export default function ShopDashboard() {
 
   const copyCredentials = () => {
     if (!createdModal) return;
-    const text = `Organization ID: ${createdModal.orgId}\nClient Email: ${createdModal.clientEmail}\nPassword: ${createdModal.generatedPassword}\nApply Link: ${getQRUrl(createdModal.orgId)}`;
+    const passwordLine = createdModal.generatedPassword
+      ? `Password: ${createdModal.generatedPassword}\n`
+      : '';
+    const text = `Organization ID: ${createdModal.orgId}\nClient Email: ${createdModal.clientEmail}\n${passwordLine}Apply Link: ${getQRUrl(createdModal.orgId)}`;
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -444,6 +465,12 @@ export default function ShopDashboard() {
           </div>
         )}
 
+        {statusError && (
+          <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">
+            Status update failed: {statusError}
+          </div>
+        )}
+
         {/* Data Table Section */}
         <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs">
           {/* Table Header Controls */}
@@ -640,7 +667,9 @@ export default function ShopDashboard() {
                 <Sparkles className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-bold text-slate-900">Organization Setup Complete!</h3>
-              <p className="text-xs text-slate-500">Google Sheet tab & Client Login account generated.</p>
+              <p className="text-xs text-slate-500">
+                {createdModal.accountExisted ? 'Google Sheet tab configured for an existing login.' : 'Google Sheet tab & Client Login account generated.'}
+              </p>
             </div>
 
             {/* Credentials Card */}
@@ -653,10 +682,20 @@ export default function ShopDashboard() {
                 <span className="text-slate-500 flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-slate-400" /> Client Email:</span>
                 <span className="font-semibold text-slate-900">{createdModal.clientEmail}</span>
               </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-500 flex items-center gap-1.5"><Key className="w-3.5 h-3.5 text-amber-500" /> Password:</span>
-                <span className="font-mono font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">{createdModal.generatedPassword}</span>
-              </div>
+              {createdModal.generatedPassword ? (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-500 flex items-center gap-1.5"><Key className="w-3.5 h-3.5 text-amber-500" /> Password:</span>
+                  <span className="font-mono font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">{createdModal.generatedPassword}</span>
+                </div>
+              ) : (
+                <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[11px] leading-relaxed">
+                  A login for this email already existed, so no new password was generated and the existing password is unchanged.
+                  If you did not create that account yourself, delete it in the Firebase Console (Authentication → Users) and create the organization again.
+                </div>
+              )}
+              {createdModal.generatedPassword && (
+                <p className="text-[11px] text-slate-500">This password is shown only once. Share it with the client securely.</p>
+              )}
               
               <button
                 onClick={copyCredentials}

@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ADL ID Pass
 
-## Getting Started
+A web app for a print shop that issues ID cards to client organizations (for example, hospitals).
 
-First, run the development server:
+- **Employees** scan an organization's QR code and fill in `/apply?org=<ORG_ID>` with their details and a photo.
+- **Client admins** sign in and see their own organization's applications at `/client-dashboard`.
+- **Shop admins** create organizations (each gets its own Google Sheets tab, custom form fields and a client login), generate QR codes, and move applications through `Pending → Printing → Ready / Rejected` at `/shop-dashboard`.
+
+**Stack:** Next.js 16 (App Router), React 19, Tailwind 4, Firebase Auth, Google Sheets (as the database), Vercel Blob (photos).
+
+## Getting started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Before you run it, set up the external services and `.env.local` as described in [LOCAL_TESTING_GUIDE.md](LOCAL_TESTING_GUIDE.md). For deployment, see [VERCEL_TESTING_GUIDE.md](VERCEL_TESTING_GUIDE.md).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Access control
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Every protected API route checks the caller's Firebase ID token on the server (`src/lib/serverAuth.ts`). The UI's redirects are only for convenience.
 
-## Learn More
+| Route | Who can call it |
+| --- | --- |
+| `POST /api/upload` | Public (JPEG/PNG/WebP, max 4 MB) |
+| `POST /api/applications` | Public, but only for organizations that already exist |
+| `GET /api/organizations?orgId=X` | Public (returns only the form's custom fields) |
+| `GET /api/applications` | Shop admins (all orgs); client admins (their own org only) |
+| `PATCH /api/applications` | Shop admins |
+| `GET /api/organizations`, `POST /api/organizations` | Shop admins |
+| `GET /api/me` | Any signed-in user with a role |
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Roles:
+- **Shop admin:** the email is listed in `SHOP_ADMIN_EMAILS`.
+- **Client admin:** the email is an organization's `Client_Email` in the `_Organizations_` tab.

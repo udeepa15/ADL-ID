@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
+import { fetchMe, type Me } from '@/lib/apiClient';
 import { 
   CreditCard, 
   Building2, 
@@ -29,6 +30,7 @@ interface SaaSLayoutProps {
 
 export default function SaaSLayout({ children, pageTitle = 'Dashboard' }: SaaSLayoutProps) {
   const [user, setUser] = useState<User | null>(null);
+  const [me, setMe] = useState<Me | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -37,8 +39,17 @@ export default function SaaSLayout({ children, pageTitle = 'Dashboard' }: SaaSLa
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+      if (!currentUser) {
+        setMe(null);
+        return;
+      }
+      try {
+        setMe(await fetchMe());
+      } catch {
+        setMe(null);
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -48,10 +59,14 @@ export default function SaaSLayout({ children, pageTitle = 'Dashboard' }: SaaSLa
     router.push('/login');
   };
 
-  const navItems = [
-    { label: 'Overview', href: user?.email?.includes('shopadmin') ? '/shop-dashboard' : '/client-dashboard', icon: Home },
-    { label: 'Applications', href: user?.email?.includes('shopadmin') ? '/shop-dashboard' : '/client-dashboard', icon: CreditCard },
-    { label: 'Apply Form', href: '/apply?org=GH-2026', icon: ShieldCheck, isExternal: false },
+  const isShop = me?.role === 'shop';
+  const dashboardHref = isShop ? '/shop-dashboard' : '/client-dashboard';
+  const navItems: { label: string; href: string; icon: typeof Home; isExternal?: boolean }[] = [
+    { label: 'Overview', href: dashboardHref, icon: Home },
+    { label: 'Applications', href: dashboardHref, icon: CreditCard },
+    ...(me?.role === 'client'
+      ? [{ label: 'Apply Form', href: `/apply?org=${encodeURIComponent(me.orgId)}`, icon: ShieldCheck, isExternal: false }]
+      : []),
   ];
 
   return (
@@ -131,7 +146,7 @@ export default function SaaSLayout({ children, pageTitle = 'Dashboard' }: SaaSLa
                 <div className="truncate">
                   <p className="text-xs font-semibold text-[#212121] truncate">{user.email}</p>
                   <p className="text-[10px] text-[#212121]/60 font-medium">
-                    {user.email?.includes('shopadmin') ? 'Shop Administrator' : 'Client Account'}
+                    {isShop ? 'Shop Administrator' : 'Client Account'}
                   </p>
                 </div>
               </div>
@@ -287,7 +302,7 @@ export default function SaaSLayout({ children, pageTitle = 'Dashboard' }: SaaSLa
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-[#E0E0E0] py-2 z-50 text-xs">
                     <div className="px-4 py-2 border-b border-[#E0E0E0]">
                       <p className="font-semibold text-[#212121] truncate">{user.email}</p>
-                      <p className="text-[10px] text-[#212121]/60">{user.email?.includes('shopadmin') ? 'Administrator' : 'Client User'}</p>
+                      <p className="text-[10px] text-[#212121]/60">{isShop ? 'Administrator' : 'Client User'}</p>
                     </div>
                     <Link
                       href="/shop-dashboard"

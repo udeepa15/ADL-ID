@@ -42,6 +42,7 @@ In your Vercel Project Dashboard:
 | `GOOGLE_SERVICE_ACCOUNT_EMAIL` | Service Account Email |
 | `GOOGLE_PRIVATE_KEY` | Private Key (paste the entire `-----BEGIN PRIVATE KEY----- ... -----END PRIVATE KEY-----` string including quotes or raw formatting) |
 | `GOOGLE_SHEET_ID` | Google Sheet ID |
+| `SHOP_ADMIN_EMAILS` | Comma-separated shop admin login emails. Only these accounts get the shop dashboard |
 
 > [!NOTE]
 > `BLOB_READ_WRITE_TOKEN` will automatically be populated if you link your Vercel Blob store in Step 3.
@@ -75,9 +76,9 @@ Once the deployment finishes and your domain is active:
 
 ### 1. Test Shop Admin Login & Dashboard
 1. Open `https://your-app-name.vercel.app/login`.
-2. Sign in using `shopadmin@example.com`.
+2. Sign in with an email listed in `SHOP_ADMIN_EMAILS`.
 3. Verify redirection to `/shop-dashboard`.
-4. Test generating and downloading a QR Code for Org `GH-2026`.
+4. Create an organization (e.g. `GH-2026`) and note the generated client password. Then download its QR code.
 
 ### 2. Test Live Photo Upload & Application Form
 1. Open `https://your-app-name.vercel.app/apply?org=GH-2026` (in Incognito mode or logged out).
@@ -87,10 +88,10 @@ Once the deployment finishes and your domain is active:
 5. Check your Google Sheet to verify the newly added row and the Vercel Blob `Photo_URL`.
 
 ### 3. Test Client Dashboard
-1. Sign in at `https://your-app-name.vercel.app/login` using `clientgh@example.com`.
+1. Sign in at `https://your-app-name.vercel.app/login` with the client email and generated password.
 2. Verify redirection to `/client-dashboard` and confirm the submitted application displays.
 
 ### 4. Test Status Sync
-1. Log back in as `shopadmin@example.com` at `/shop-dashboard`.
+1. Log back in as the shop admin at `/shop-dashboard`.
 2. Update the status of the submitted application (e.g. change to "Printing").
 3. Verify the status updates in Google Sheets and on the Client Dashboard.

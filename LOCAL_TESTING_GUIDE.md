@@ -30,7 +30,14 @@ GOOGLE_SHEET_ID="your_google_sheet_id"
 
 # Vercel Blob Storage Token
 BLOB_READ_WRITE_TOKEN="vercel_blob_rw_token_here"
+
+# Comma-separated list of shop admin login emails (server-side only)
+SHOP_ADMIN_EMAILS="you@yourshop.com"
 ```
+
+> Roles are decided on the server. Shop admins are the emails in `SHOP_ADMIN_EMAILS`.
+> Client admins are the `Client_Email` assigned to an organization in the `_Organizations_` tab.
+> Any other Firebase account is signed out with "not granted access".
 
 ---
 
@@ -51,9 +58,8 @@ BLOB_READ_WRITE_TOKEN="vercel_blob_rw_token_here"
 1. Go to the [Firebase Console](https://console.firebase.google.com/) and create a project.
 2. Under **Build > Authentication**, click **Get Started** and enable the **Email/Password** sign-in method.
 3. Under **Project Settings > General**, add a Web App and copy the Firebase configuration values into your `.env.local`.
-4. Go back to Authentication > Users and **Add user**. Create two test accounts:
-   - `shopadmin@example.com` (password: `password123`)
-   - `clientgh@example.com` (password: `password123`) *(Note: The app routes to client dashboard if "shopadmin" is not in the email, and uses "GH-2026" if "gh" is in the email).*
+4. Go back to Authentication > Users and **Add user** to create your shop admin account (use a strong password). Put that email in `SHOP_ADMIN_EMAILS`.
+   - Don't create client accounts by hand. The shop dashboard's **Create Organization** form creates the client login and shows its generated password once.
 
 ---
 
@@ -83,7 +89,7 @@ The app will be available at `http://localhost:3000`.
 1. Navigate to `http://localhost:3000/login`.
 2. Login with your `shopadmin@example.com` account.
 3. You will be redirected to `/shop-dashboard`.
-4. Test the **QR Code Generator**: Type `GH-2026` into the Organization ID field and click Generate. You can test downloading the SVG.
+4. Create an organization: enter an Organization ID (e.g. `GH-2026`) and a client admin email, then submit. Copy the generated password and download the QR code from the dialog.
 
 ### 2. Test the Application Form
 1. Open a new incognito window or log out.
@@ -94,7 +100,7 @@ The app will be available at `http://localhost:3000`.
 
 ### 3. Test the Client Dashboard
 1. Navigate back to `http://localhost:3000/login`.
-2. Login with your `clientgh@example.com` account.
+2. Login with the client email and generated password from the Create Organization dialog.
 3. You will be redirected to `/client-dashboard` and should see the application you just submitted.
 
 ### 4. Test Status Updates

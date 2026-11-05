@@ -2,9 +2,11 @@
 
 import { useState, useRef, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { v4 as uuidv4 } from 'uuid';
 import { Upload, CheckCircle2, ArrowLeft, CreditCard, ShieldCheck, Sparkles } from 'lucide-react';
 import Link from 'next/link';
+
+const ALLOWED_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_PHOTO_BYTES = 4 * 1024 * 1024;
 
 function ApplyForm() {
   const searchParams = useSearchParams();
@@ -48,7 +50,7 @@ function ApplyForm() {
         }
       } catch (err) {
         console.error('Failed to fetch org schema:', err);
-      } fontally: {
+      } finally {
         setFetchingSchema(false);
       }
     }
@@ -62,6 +64,14 @@ function ApplyForm() {
 
   const handleFileChange = (selectedFile: File | null) => {
     if (selectedFile) {
+      if (!ALLOWED_PHOTO_TYPES.includes(selectedFile.type)) {
+        setError('Photo must be a JPEG, PNG or WebP image.');
+        return;
+      }
+      if (selectedFile.size > MAX_PHOTO_BYTES) {
+        setError('Photo must be 4 MB or smaller.');
+        return;
+      }
       setFile(selectedFile);
       setPreviewUrl(URL.createObjectURL(selectedFile));
       setError('');
@@ -84,37 +94,34 @@ function ApplyForm() {
 
     try {
       // 1. Upload photo to Blob API
-      const response = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}`, {
+      const response = await fetch('/api/upload', {
         method: 'POST',
+        headers: { 'Content-Type': file.type },
         body: file,
       });
 
+      const blob = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error('Failed to upload photo to storage.');
+        throw new Error(blob.error || 'Failed to upload photo to storage.');
       }
 
-      const blob = await response.json();
-
-      // 2. Submit application record
-      const applicationId = uuidv4();
+      // 2. Submit application record (the server assigns the ID, timestamp and status)
       const appResponse = await fetch('/api/applications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: applicationId,
           orgId,
-          timestamp: new Date().toISOString(),
           name,
           role,
           bloodGroup,
           photoUrl: blob.url,
-          status: 'Pending',
           customData,
         }),
       });
 
       if (!appResponse.ok) {
-        throw new Error('Failed to save application details.');
+        const data = await appResponse.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to save application details.');
       }
 
       setSuccess(true);
@@ -315,12 +322,12 @@ function ApplyForm() {
                   <span className="text-xs font-semibold text-slate-700 group-hover:text-slate-900 transition-colors">
                     Click to select photo
                   </span>
-                  <span className="text-[11px] text-slate-400 mt-0.5">PNG, JPG, or WEBP up to 5MB</span>
+                  <span className="text-[11px] text-slate-400 mt-0.5">PNG, JPG, or WEBP up to 4MB</span>
                 </div>
               )}
               <input 
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 ref={fileInputRef}
                 onChange={(e) => handleFileChange(e.target.files?.[0] || null)}
                 className="hidden"

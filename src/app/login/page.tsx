@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { fetchMe, dashboardPathFor } from '@/lib/apiClient';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Lock, Mail, CreditCard, ArrowLeft, KeyRound, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Lock, Mail, CreditCard, ArrowLeft, KeyRound } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -21,24 +22,20 @@ export default function LoginPage() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // Simple role check based on email string as per spec
-      if (email.includes('shopadmin')) {
-        router.push('/shop-dashboard');
-      } else {
-        router.push('/client-dashboard');
+      // The server decides the role; email text is never trusted for this.
+      const me = await fetchMe();
+      if (!me) {
+        await signOut(auth);
+        setError('This account has not been granted access to any portal.');
+        return;
       }
+      router.push(dashboardPathFor(me));
     } catch (err: unknown) {
       console.error(err);
       setError('Invalid email or password credentials.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const fillDemoAccount = (demoEmail: string) => {
-    setEmail(demoEmail);
-    setPassword('password123');
-    setError('');
   };
 
   return (
@@ -123,29 +120,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Quick Demo Credentials Helper */}
-          <div className="mt-8 pt-6 border-t border-slate-100">
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-3 font-medium">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span>Quick Test Account Fill:</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => fillDemoAccount('shopadmin@example.com')}
-                className="px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 transition-colors text-center"
-              >
-                Shop Admin
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemoAccount('clientgh@example.com')}
-                className="px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 transition-colors text-center"
-              >
-                Client GH
-              </button>
-            </div>
-          </div>
         </div>
       </main>
 

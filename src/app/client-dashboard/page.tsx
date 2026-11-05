@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { authFetch, fetchMe } from '@/lib/apiClient';
 import SaaSLayout from '@/components/SaaSLayout';
 import { StatusDistributionChart } from '@/components/DashboardCharts';
 import { 
@@ -38,9 +39,10 @@ export default function ClientDashboard() {
   const [statusFilter, setStatusFilter] = useState('');
   const router = useRouter();
 
-  async function fetchApplications(orgId: string) {
+  async function fetchApplications() {
     try {
-      const res = await fetch(`/api/applications?orgId=${encodeURIComponent(orgId)}`);
+      // The server scopes this to the signed-in client's organization.
+      const res = await authFetch('/api/applications');
       if (!res.ok) throw new Error('Failed to fetch data');
       const data = await res.json();
       setApplications(data.applications || []);
@@ -55,34 +57,21 @@ export default function ClientDashboard() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
         router.push('/login');
-      } else {
-        let assignedOrgId = 'GH-2026';
-
-        try {
-          const orgsRes = await fetch('/api/organizations');
-          if (orgsRes.ok) {
-            const orgsData = await orgsRes.json();
-            const matchedOrg = (orgsData.organizations || []).find(
-              (o: { clientEmail: string; orgId: string }) => 
-                o.clientEmail.toLowerCase() === user.email?.toLowerCase()
-            );
-            if (matchedOrg) {
-              assignedOrgId = matchedOrg.orgId;
-            } else if (user.email?.includes('gh')) {
-              assignedOrgId = 'GH-2026';
-            } else {
-              const emailPrefix = user.email?.split('@')[0] || '';
-              if (emailPrefix.startsWith('client')) {
-                assignedOrgId = emailPrefix.replace('client', '').toUpperCase() || 'TEST-ORG';
-              }
-            }
-          }
-        } catch (err) {
-          console.error('Error matching org:', err);
+        return;
+      }
+      try {
+        const me = await fetchMe();
+        if (!me) {
+          router.push('/login');
+        } else if (me.role === 'shop') {
+          router.push('/shop-dashboard');
+        } else {
+          setUserOrgId(me.orgId);
+          fetchApplications();
         }
-
-        setUserOrgId(assignedOrgId);
-        fetchApplications(assignedOrgId);
+      } catch (err) {
+        console.error('Failed to verify session:', err);
+        router.push('/login');
       }
     });
 
